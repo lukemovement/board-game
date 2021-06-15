@@ -17,9 +17,14 @@ services:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
-            - '../src/Entity/'
+            - '../src/Domain/*/Entity'
             - '../src/Kernel.php'
             - '../src/Tests/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Domain\GameData\Command\MapGeneratorCommand:
+        tags:
+            -  { name: console.command, command: app:gamedata:map:generate }
+
+    App\Domain\GameData\Command\MapRenderCommand:
+        tags:
+            -  { name: console.command, command: app:gamedata:map:render }
