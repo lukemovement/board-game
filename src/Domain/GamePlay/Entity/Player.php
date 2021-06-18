@@ -208,4 +208,12 @@ class Player implements MovableInterface
 
         return $healthPlayerStat->getLevel() > 0;
     }
+
+    public function getPlayerStat(int $statTypeId): ?PlayerStat
+    {
+        return $this->getPlayerStats()->filter(
+            fn(PlayerStat $playerStat) => $playerStat->getPlayerStatConfig()
+                ->getStatTypeId() === $statTypeId
+        )->first();
+    }
 }

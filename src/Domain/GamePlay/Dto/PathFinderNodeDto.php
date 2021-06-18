@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\GamePlay\Service;
+namespace App\Domain\GamePlay\Dto;
 
 use App\Domain\GameData\Entity\MapTile;
 use Doctrine\Common\Collections\ArrayCollection;

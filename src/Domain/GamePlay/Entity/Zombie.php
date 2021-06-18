@@ -4,6 +4,8 @@ namespace App\Domain\GamePlay\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\Common\Type\Position;
+use App\Domain\GameData\Entity\MapTile;
+use App\Domain\GameData\Entity\PlayerStatConfig;
 use App\Domain\GameData\Entity\Tile;
 use App\Domain\GameData\Entity\ZombieType;
 use App\Domain\GamePlay\Interface\MovableInterface;
@@ -82,6 +84,13 @@ class Zombie implements MovableInterface
 
     public function setPosition(Position $position): self
     {
+        if (
+            null !== $this->position &&
+            $this->position->matches($position)
+        ) {
+            return false;
+        }
+
         $this->position = $position;
 
         return $this;
@@ -109,5 +118,21 @@ class Zombie implements MovableInterface
         $this->health = $health;
 
         return $this;
+    }
+
+    public function getMapTile(): MapTile
+    {
+        return $this->game->getMap()->getMapTile($this->position);
+    }
+
+    public function attackPlayer(Player $player): void
+    {
+        /** @var PlayerStat $playerHealthStat */
+        $playerHealthStat = $player->getPlayerStats()->filter(
+            fn(PlayerStat $playerStat) => $playerStat
+                ->getPlayerStatConfig()->getStatTypeId() === PlayerStatConfig::HEALTH_ID
+        )->first();
+
+        $playerHealthStat->setCurrent($playerHealthStat->getCurrent() - $this->getZombieType()->getAttack());
     }
 }

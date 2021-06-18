@@ -5,6 +5,8 @@ namespace App\Domain\GamePlay\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\Common\Type\Position;
 use App\Domain\GameData\Entity\Map;
+use App\Domain\GameData\Entity\MapTile;
+use App\Domain\GamePlay\Dto\PathFinderNodeDto;
 use App\Domain\GamePlay\Repository\GameRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -306,8 +308,68 @@ class Game
         return $this;
     }
 
+    /** 
+     * @return Collection|Player[]
+     */
     public function getLivingPlayers(): Collection
     {
-        
+        return $this->getPlayers()->filter(fn(Player $player) => $player->isAlive());
+    }
+
+    /**
+     * @return ArrayCollection|PathFinderNodeDto
+     */
+    public function listAvailableRoutes(
+        MapTile $mapTile,
+        int $maxDepth,
+        ArrayCollection $route = null,
+        ArrayCollection $availableMoves = null,
+        $currentDepth = 0,
+    ): ArrayCollection
+    {        
+        if ($this->map->getZombieVisibility() === $currentDepth) {
+            return $availableMoves;
+        }
+
+        $currentDepth++;
+
+        if (null === $availableMoves) {
+            $availableMoves = new ArrayCollection();
+        }
+
+        $mapTile->getAdjacentTiles()->forAll(
+            function(int $i, MapTile $mapTile) use (
+                $route,
+                $currentDepth,
+                $availableMoves,
+                $maxDepth
+            ) {
+                if ($route->filter(
+                    fn(PathFinderNodeDto $pathFinderNodeDto) => 
+                        $pathFinderNodeDto->destination->getPosition()->matches(
+                            $mapTile->getPosition()
+                        )
+                    )->count() > 0
+                ) {
+                    return true;
+                }
+
+                $node = new PathFinderNodeDto();
+
+                $node->destination = $mapTile;
+                $node->route = $route;
+
+                $availableMoves->add($node);
+
+                $newRoute = clone $route;
+                $newRoute->add($node);
+
+                $this->listAvailableRoutes($mapTile, $maxDepth, $newRoute, $availableMoves, $currentDepth);
+
+                return true;
+            } 
+        );
+
+        return $availableMoves;
     }
 }

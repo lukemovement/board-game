@@ -73,12 +73,12 @@ class Item implements RoundAwareInterface
     /**
      * @ORM\Column(type="boolean")
      */
-    private $leftHandSlot = false;
+    private $fillsLeftHandSlot = false;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $rightHandSlot = false;
+    private $fillsRightHandSlot = false;
 
     /**
      * @ORM\Column(type="boolean")
@@ -256,36 +256,36 @@ class Item implements RoundAwareInterface
         return $this;
     }
 
-    public function getLeftHandSlot(): bool
+    public function getFillsLeftHandSlot(): bool
     {
-        return $this->leftHandSlot;
+        return $this->fillsLeftHandSlot;
     }
 
-    public function setLeftHandSlot(bool $leftHandSlot): self
+    public function setFillsLeftHandSlot(bool $fillsLeftHandSlot): self
     {
-        $this->leftHandSlot = $leftHandSlot;
+        $this->fillsLeftHandSlot = $fillsLeftHandSlot;
 
         return $this;
     }
 
-    public function getRightHandSlot(): bool
+    public function getFillsRightHandSlot(): bool
     {
-        return $this->rightHandSlot;
+        return $this->fillsRightHandSlot;
     }
 
-    public function setRightHandSlot(bool $rightHandSlot): self
+    public function setFillsRightHandSlot(bool $fillsRightHandSlot): self
     {
-        $this->rightHandSlot = $rightHandSlot;
+        $this->fillsRightHandSlot = $fillsRightHandSlot;
 
         return $this;
     }
 
-    public function getBothHandsSlot(): bool
+    public function getFillsBothHandsSlot(): bool
     {
         return $this->bothHandsSlot;
     }
 
-    public function setBothHandsSlot(bool $bothHandsSlot): self
+    public function setFillsBothHandsSlot(bool $bothHandsSlot): self
     {
         $this->bothHandsSlot = $bothHandsSlot;
 
@@ -330,6 +330,18 @@ class Item implements RoundAwareInterface
 
     public function isItemEquippable(): bool
     {
-        # code...
+        $rightHand = $this->getFillsRightHandSlot();
+        $leftHand = $this->getFillsLeftHandSlot();
+        $chest = $this->getFillsChestSlot();
+        $head = $this->getFillsHeadSlot();
+        $legs = $this->getFillsLegsSlot();
+
+        return in_array(true, [ 
+            $rightHand,
+            $leftHand,
+            $chest,
+            $head,
+            $legs
+        ]);
     }
 }

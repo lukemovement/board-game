@@ -108,7 +108,7 @@ class PlayerStat
 
         $this->player->getPlayerItems()->forAll(function(int $i, PlayerItem $playerItem) use (&$level)
         {
-            $level = $level + $playerItem->computedLevel();
+            $level = $level + $playerItem->getComputedModifier($this);
         });
 
         return $level;
