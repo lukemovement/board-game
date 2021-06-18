@@ -35,7 +35,7 @@ class Fixture02Items extends Fixture implements ORMFixtureInterface
         $bluntKnife->setUseOnAttack(true);
         $bluntKnife->setUseOnDefence(true);
         $bluntKnife->setUseFromBackpack(false);
-        $bluntKnife->setRightHandSlot(true);
+        $bluntKnife->setFillsRightHandSlot(true);
         $this->manager->persist($bluntKnife);
 
         $attackModifier = new PlayerStatModifier(
@@ -54,7 +54,7 @@ class Fixture02Items extends Fixture implements ORMFixtureInterface
         $sharpKnife->setUseOnAttack(true);
         $sharpKnife->setUseOnDefence(true);
         $sharpKnife->setUseFromBackpack(false);
-        $sharpKnife->setRightHandSlot(true);
+        $sharpKnife->setFillsRightHandSlot(true);
         $this->manager->persist($sharpKnife);
 
         $attackModifier = new PlayerStatModifier(
@@ -72,7 +72,7 @@ class Fixture02Items extends Fixture implements ORMFixtureInterface
         $machete->setDurability(20);
         $machete->setUseOnAttack(true);
         $machete->setUseOnDefence(true);
-        $machete->setRightHandSlot(true);
+        $machete->setFillsRightHandSlot(true);
         $machete->setUseFromBackpack(false);
         $this->manager->persist($machete);
 
