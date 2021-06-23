@@ -2,6 +2,8 @@
 
 namespace App\Domain\Jann\Environment\Repository;
 
+use App\Domain\GameData\Entity\PlayerStatConfig;
+use App\Domain\GamePlay\Entity\Player;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,32 +21,27 @@ class PlayerStateRepository extends ServiceEntityRepository
         parent::__construct($registry, PlayerState::class);
     }
 
-    // /**
-    //  * @return PlayerState[] Returns an array of PlayerState objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findOrCreate(
+        Player $player
+    )
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $matches = $this->findBy([
+            "health" => $player->getPlayerStat(PlayerStatConfig::HEALTH_ID),
+            "energy" => $player->getPlayerStat(PlayerStatConfig::ENERGY_ID),            
+            "attack" => $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)
+        ]);
 
-    /*
-    public function findOneBySomeField($value): ?PlayerState
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (count($matches) > 0) {
+            return $matches[0];
+        }
+
+        $playerState = new PlayerState(
+            $player
+        );
+
+        $this->_em->persist($playerState);
+        $this->_em->flush();
+
+        return $playerState;
     }
-    */
 }

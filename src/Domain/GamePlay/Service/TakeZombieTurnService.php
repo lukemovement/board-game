@@ -45,7 +45,7 @@ class TakeZombieTurnService {
         Zombie $zombie
     )
     {
-        $potentialMoves = $this->game->listAvailableRoutes(
+        $potentialMoves = $this->game->getAvailableRoutes(
             $zombie->getMapTile(),
             $this->game->getMap()->getZombieVisibility()
         )->filter(

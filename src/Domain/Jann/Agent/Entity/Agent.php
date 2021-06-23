@@ -25,6 +25,11 @@ class Agent
      */
     private $game;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Decision::class)
+     */
+    private $previousDecision;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -38,6 +43,18 @@ class Agent
     public function setGame(?Game $game): self
     {
         $this->game = $game;
+
+        return $this;
+    }
+
+    public function getPreviousDecision(): ?Decision
+    {
+        return $this->previousDecision;
+    }
+
+    public function setPreviousDecision(?Decision $previousDecision): self
+    {
+        $this->previousDecision = $previousDecision;
 
         return $this;
     }

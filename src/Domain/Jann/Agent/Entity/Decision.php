@@ -28,18 +28,6 @@ class Decision
     private $linkCount;
 
     /**
-     * @ORM\ManyToOne(targetEntity=TileState::class, inversedBy="nextDecisions")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $previousTileState;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=TileState::class, inversedBy="previousDecisions")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $nextTileState;
-
-    /**
      * @ORM\ManyToOne(targetEntity=PlayerState::class)
      * @ORM\JoinColumn(nullable=false)
      */
@@ -52,9 +40,41 @@ class Decision
     private $nextPlayerState;
 
     /**
+     * @ORM\ManyToOne(targetEntity=Decision::class)
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $currentTileState;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=TileState::class)
+     */
+    private $movedToTileState;
+
+    /**
      * @ORM\ManyToOne(targetEntity=ZombieState::class)
      */
-    private $attackedZombieState;
+    private $attackedZombieStateBefore;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=ZombieState::class)
+     */
+    private $attackedZombieStateAfter;
+
+    public function __construct(
+        ?TileState $previousTileState,
+        ?TileState $nextTileState,
+        ?PlayerState $previousPlayerState,
+        ?PlayerState $nextPlayerState,
+        ?ZombieState $attackedZombieStateBefore,
+        ?ZombieState $attackedZombieStateAfter,
+    ) {
+        $this->previousTileState = $previousTileState;
+        $this->nextTileState = $nextTileState;
+        $this->previousPlayerState = $previousPlayerState;
+        $this->nextPlayerState = $nextPlayerState;
+        $this->attackedZombieStateBefore = $attackedZombieStateBefore;
+        $this->attackedZombieStateAfter = $attackedZombieStateAfter;
+    }
 
     public function getId(): ?int
     {
@@ -69,30 +89,6 @@ class Decision
     public function setLinkCount(int $linkCount): self
     {
         $this->linkCount = $linkCount;
-
-        return $this;
-    }
-
-    public function getPreviousTileState(): ?TileState
-    {
-        return $this->previousTileState;
-    }
-
-    public function setPreviousTileState(?TileState $previousTileState): self
-    {
-        $this->previousTileState = $previousTileState;
-
-        return $this;
-    }
-
-    public function getNextTileState(): ?TileState
-    {
-        return $this->nextTileState;
-    }
-
-    public function setNextTileState(?TileState $nextTileState): self
-    {
-        $this->nextTileState = $nextTileState;
 
         return $this;
     }
@@ -121,14 +117,70 @@ class Decision
         return $this;
     }
 
-    public function getAttackedZombieState(): ?ZombieState
+    public function getDecisionValue(): int|null
     {
-        return $this->attackedZombieState;
+        if (null === $this->getNextPlayerState()) {
+            return null;
+        }
+
+        $healthDiff = 
+            $this->getNextPlayerState()->getHealth() -
+            $this->getPreviousPlayerState()->getHealth();
+
+        
+        $zombieDiff = 
+            null !== $this->getAttackedZombieStateBefore() &&
+            null !== $this->getAttackedZombieStateAfter() ? 
+            $this->getAttackedZombieStateBefore()->getCount() -
+            $this->getAttackedZombieStateAfter()->getCount() : 0;
+
+        return $healthDiff + $zombieDiff;
     }
 
-    public function setAttackedZombieState(?ZombieState $attackedZombieState): self
+    public function getCurrentTileState(): ?self
     {
-        $this->attackedZombieState = $attackedZombieState;
+        return $this->currentTileState;
+    }
+
+    public function setCurrentTileState(?self $currentTileState): self
+    {
+        $this->currentTileState = $currentTileState;
+
+        return $this;
+    }
+
+    public function getMovedToTileState(): ?TileState
+    {
+        return $this->movedToTileState;
+    }
+
+    public function setMovedToTileState(?TileState $movedToTileState): self
+    {
+        $this->movedToTileState = $movedToTileState;
+
+        return $this;
+    }
+
+    public function getAttackedZombieStateBefore(): ?ZombieState
+    {
+        return $this->attackedZombieStateBefore;
+    }
+
+    public function setAttackedZombieStateBefore(?ZombieState $attackedZombieStateBefore): self
+    {
+        $this->attackedZombieStateBefore = $attackedZombieStateBefore;
+
+        return $this;
+    }
+
+    public function getAttackedZombieStateAfter(): ?ZombieState
+    {
+        return $this->attackedZombieStateAfter;
+    }
+
+    public function setAttackedZombieStateAfter(?ZombieState $attackedZombieStateAfter): self
+    {
+        $this->attackedZombieStateAfter = $attackedZombieStateAfter;
 
         return $this;
     }

@@ -49,15 +49,12 @@ class Zombie implements MovableInterface
     private $health;
 
     public function __construct(
-        Game $game,
-        Position $position,
-        ZombieType $zombieType
+        Zombie $zombie
     ) {
-        $this->game = $game;
-        $this->position = $position;
-        $this->zombieType = $zombieType;
-
-        $this->health = $zombieType->getHealth() * $game->getZombieHealthModifier();
+        $this->game = $zombie->getGame();
+        $this->position = $zombie->getPosition();
+        $this->zombieType = $zombie->getZombieType();
+        $this->health = $zombie->getHealth();
     }
 
     public function getId(): ?int

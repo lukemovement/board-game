@@ -38,14 +38,14 @@ class PlayerState
     /**
      * @ORM\Column(type="integer")
      */
-    private $maxHealth;
+    private $energy;
 
     public function __construct(
         Player $player
     ) {
-        $this->health = $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)->getCurrent();        
-        $this->maxHealth = $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)->getComputedLevel();
+        $this->health = $player->getPlayerStat(PlayerStatConfig::HEALTH_ID)->getComputedLevel();        
         $this->attack = $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)->getComputedLevel();
+        $this->energy = $player->getPlayerStat(PlayerStatConfig::ENERGY_ID)->getComputedLevel();
     }
 
     public function getId(): ?int
@@ -77,14 +77,14 @@ class PlayerState
         return $this;
     }
 
-    public function getMaxHealth(): ?int
+    public function getEnergy(): ?int
     {
-        return $this->maxHealth;
+        return $this->energy;
     }
 
-    public function setMaxHealth(int $maxHealth): self
+    public function setEnergy(int $energy): self
     {
-        $this->maxHealth = $maxHealth;
+        $this->energy = $energy;
 
         return $this;
     }

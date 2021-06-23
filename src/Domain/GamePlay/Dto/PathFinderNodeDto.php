@@ -9,5 +9,8 @@ class PathFinderNodeDto {
 
     public MapTile $destination;
 
+    /**
+     * @var MapTile[]|ArrayCollection
+     */
     public ArrayCollection $route;
 }

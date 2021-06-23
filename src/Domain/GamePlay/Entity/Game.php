@@ -319,7 +319,7 @@ class Game
     /**
      * @return ArrayCollection|PathFinderNodeDto
      */
-    public function listAvailableRoutes(
+    public function getAvailableRoutes(
         MapTile $mapTile,
         int $maxDepth,
         ArrayCollection $route = null,
@@ -327,7 +327,7 @@ class Game
         $currentDepth = 0,
     ): ArrayCollection
     {        
-        if ($this->map->getZombieVisibility() === $currentDepth) {
+        if ($maxDepth === $currentDepth) {
             return $availableMoves;
         }
 
@@ -335,6 +335,10 @@ class Game
 
         if (null === $availableMoves) {
             $availableMoves = new ArrayCollection();
+        }
+
+        if (null === $route) {
+            $route = new ArrayCollection();
         }
 
         $mapTile->getAdjacentTiles()->forAll(
@@ -357,6 +361,7 @@ class Game
                 $node = new PathFinderNodeDto();
 
                 $node->destination = $mapTile;
+                $route->add($mapTile);
                 $node->route = $route;
 
                 $availableMoves->add($node);
@@ -364,7 +369,7 @@ class Game
                 $newRoute = clone $route;
                 $newRoute->add($node);
 
-                $this->listAvailableRoutes($mapTile, $maxDepth, $newRoute, $availableMoves, $currentDepth);
+                $this->getAvailableRoutes($mapTile, $maxDepth, $newRoute, $availableMoves, $currentDepth);
 
                 return true;
             } 

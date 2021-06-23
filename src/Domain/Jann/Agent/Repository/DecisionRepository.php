@@ -2,8 +2,17 @@
 
 namespace App\Domain\Jann\Agent\Repository;
 
+use App\Domain\Common\Type\Position;
+use App\Domain\GameData\Entity\MapTile;
+use App\Domain\GamePlay\Entity\Game;
+use App\Domain\GamePlay\Entity\Player;
 use App\Domain\Jann\Agent\Entity\Decision;
+use App\Domain\Jann\Environment\Entity\PlayerState;
+use App\Domain\Jann\Environment\Entity\TileState;
+use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
+use App\Domain\Jann\Environment\Repository\TileStateRepository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -14,37 +23,35 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class DecisionRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        private PlayerStateRepository $playerStateRepository,
+        private TileStateRepository $tileStateRepository,
+        ManagerRegistry $registry
+    ) {
         parent::__construct($registry, Decision::class);
     }
 
-    // /**
-    //  * @return Decision[] Returns an array of Decision objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Decision[]
+     */
+    public function findAvailableMatches(
+        PlayerState $playerState,
+        TileState $tileState,
+        ArrayCollection $adjacentTileStates
+    ): array
     {
-        return $this->createQueryBuilder('b')
-            ->andWhere('b.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('b.id', 'ASC')
-            ->setMaxResults(10)
+        return $this->createQueryBuilder("d")
+            ->where("d.previousPlayerState = :PLAYER_STATE")
+            ->where("d.currentTileState = :TILE_STATE")
+            ->where("d.movedToTileState IN (:NEXT_TILE_STATES)")
+            ->orWhere("d.attackedZombieStateBefore IN (:ZOMBIE_STATES)")
+            ->setParameters([
+                ":PLAYER_STATE" => $playerState,
+                ":TILE_STATE" => $tileState,
+                ":NEXT_TILE_STATES" => $adjacentTileStates,
+                ":ZOMBIE_STATES" => $tileState->getZombieStates()
+            ])
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Decision
-    {
-        return $this->createQueryBuilder('b')
-            ->andWhere('b.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

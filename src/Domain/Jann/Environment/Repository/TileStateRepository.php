@@ -2,8 +2,16 @@
 
 namespace App\Domain\Jann\Environment\Repository;
 
+use App\Domain\GameData\Entity\MapTile;
+use App\Domain\GamePlay\Entity\Game;
+use App\Domain\GamePlay\Entity\Zombie;
+use App\Domain\Jann\Environment\Entity\RouteState;
+use App\Domain\Jann\Environment\Entity\TileRouteLink;
 use App\Domain\Jann\Environment\Entity\TileState;
+use App\Domain\Jann\Environment\Entity\TileZombieLink;
+use App\Domain\Jann\Environment\Entity\ZombieState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -14,37 +22,39 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class TileStateRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(
+        ManagerRegistry $registry
+    )
     {
         parent::__construct($registry, TileState::class);
     }
 
-    // /**
-    //  * @return TileState[] Returns an array of TileState objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findOrCreate(ArrayCollection $zombies): TileState
     {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('t.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $queryBuilder = $this->createQueryBuilder("tileState")
+            ->join("tileState.zombieStates", "zombieState")
+            ->where("zombieState.id IN (:ZOMBIE_LINKS)")
+            ->andWhere("COUNT(zombieState) = (:ZOMBIE_LINKS_COUNT)");
 
-    /*
-    public function findOneBySomeField($value): ?TileState
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+
+        $queryBuilder->setParameters([
+            ":ZOMBIE_LINKS" => $zombies,
+            ":ZOMBIE_LINKS_COUNT" => $zombies->count(),
+        ]);
+
+        $matches = $queryBuilder->getQuery()->getResult();
+
+        if (count($matches) > 0) {
+            return $matches[0];
+        }
+
+        $tileState = new TileState();
+
+        $zombies->forAll(fn(int $i, ZombieState $zombieState) => $tileState->addZombieState($zombieState));
+
+        $this->_em->persist($tileState);
+        $this->_em->flush($tileState);
+
+        return $tileState;
     }
-    */
 }

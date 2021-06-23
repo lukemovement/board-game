@@ -2,6 +2,7 @@
 
 namespace App\Domain\Jann\Environment\Repository;
 
+use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\Jann\Environment\Entity\ZombieState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,32 +20,24 @@ class ZombieStateRepository extends ServiceEntityRepository
         parent::__construct($registry, ZombieState::class);
     }
 
-    // /**
-    //  * @return ZombieState[] Returns an array of ZombieState objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findOrCreate(Zombie $zombie)
     {
-        return $this->createQueryBuilder('z')
-            ->andWhere('z.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('z.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $matches = $this->findBy([
+            'health' => $zombie->getHealth(),
+            'zombieType' => $zombie->getZombieType()
+        ]);
 
-    /*
-    public function findOneBySomeField($value): ?ZombieState
-    {
-        return $this->createQueryBuilder('z')
-            ->andWhere('z.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (count($matches) > 0) {
+            return $matches[0];
+        }
+
+        $zombieState = new ZombieState(
+            $zombie
+        );
+
+        $this->_em->persist($zombieState);
+        $this->_em->flush($zombieState);
+
+        return $zombieState;
     }
-    */
 }
