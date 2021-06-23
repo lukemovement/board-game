@@ -20,7 +20,7 @@ use App\Domain\Jann\NeuralNetworkConfig;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 
-class DecisionTreeSetupService {
+class DecisionEvaluationService {
 
     public function __construct(
         private DecisionRepository $decisionRepository,
@@ -31,9 +31,12 @@ class DecisionTreeSetupService {
 
     private Player $player;
 
+    /**
+     * @return Decision[][]
+     */
     public function execute(
         Player $player
-    )
+    ): array
     {
         $this->player = $player;
 
@@ -53,13 +56,8 @@ class DecisionTreeSetupService {
             $nextTileStates
         );
 
-
+        return $this->walk($availableDecisions)->toArray();
     }
-
-    /**
-     * @var Decision[][]
-     */
-    private array $decisionTree = [];
 
     /**
      * @param Decision[] $decision
@@ -92,7 +90,8 @@ class DecisionTreeSetupService {
             $outcomes = $this->predictOutComes($decision);
             
             // Reset the game state
-            $this->entityManager->clear();
+            $this->entityManager->refresh($this->player);
+            $this->entityManager->refresh($this->player->getGame());
 
             // Repeate for each outcome
             $this->walk($outcomes, $newPath, $allPaths, $depth);
