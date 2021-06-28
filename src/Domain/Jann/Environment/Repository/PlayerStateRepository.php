@@ -28,7 +28,8 @@ class PlayerStateRepository extends ServiceEntityRepository
         $matches = $this->findBy([
             "health" => $player->getPlayerStat(PlayerStatConfig::HEALTH_ID),
             "energy" => $player->getPlayerStat(PlayerStatConfig::ENERGY_ID),            
-            "attack" => $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)
+            "attack" => $player->getPlayerStat(PlayerStatConfig::ATTACK_ID),
+            "maxHealth" => $player->getPlayerStat(PlayerStatConfig::HEALTH_ID)->getPlayerStatConfig()->getMaxLevel()
         ]);
 
         if (count($matches) > 0) {

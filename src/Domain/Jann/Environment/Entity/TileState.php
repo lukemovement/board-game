@@ -5,7 +5,7 @@ namespace App\Domain\Jann\Environment\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\Common\Type\Position;
 use App\Domain\GamePlay\Entity\Game;
-use App\Domain\Jann\Agent\Entity\Decision;
+use App\Domain\Jann\Agent\Entity\Behaviour;
 use App\Domain\Jann\Environment\Repository\TileStateRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

@@ -78,18 +78,6 @@ class PlayerStat
         return $this;
     }
 
-    public function getCurrent(): ?int
-    {
-        return $this->current;
-    }
-
-    public function setCurrent(int $current): self
-    {
-        $this->current = $current;
-
-        return $this;
-    }
-
     public function getPlayerStatConfig(): ?PlayerStatConfig
     {
         return $this->playerStatConfig;
@@ -112,5 +100,16 @@ class PlayerStat
         });
 
         return $level;
+    }
+
+    public function decrease(int $val)
+    {
+        $this->level = $this->level - $val;
+
+        if ($this->level < 0) {
+            $this->level = 0;
+        }
+
+        return $this;
     }
 }

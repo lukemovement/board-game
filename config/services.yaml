@@ -23,8 +23,8 @@ services:
 
     App\Domain\GameData\Command\MapGeneratorCommand:
         tags:
-            -  { name: console.command, command: app:gamedata:map:generate }
+            -  { name: console.command, command: app:map:generate }
 
     App\Domain\GameData\Command\MapRenderCommand:
         tags:
-            -  { name: console.command, command: app:gamedata:map:render }
+            -  { name: console.command, command: app:map:render }

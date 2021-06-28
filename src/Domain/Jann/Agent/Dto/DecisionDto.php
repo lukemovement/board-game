@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Jann\Agent\Dto;
 
-use App\Domain\Jann\Agent\Entity\Decision;
+use App\Domain\Jann\Behaviour\Entity\Behaviour;
 
-class DecisionEvaluationDto {
+class DecisionDto {
 
-    public Decision $decision;
+    public Behaviour $behaviour;
 
     public float $chance;
 

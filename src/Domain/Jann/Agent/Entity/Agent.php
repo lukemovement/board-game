@@ -4,7 +4,8 @@ namespace App\Domain\Jann\Agent\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\GamePlay\Entity\Game;
-use App\Repository\Domain\Jann\Agent\Entity\AgentRepository;
+use App\Domain\Jann\Agent\Repository\AgentRepository;
+use App\Domain\Jann\Behaviour\Entity\Behaviour;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -26,9 +27,9 @@ class Agent
     private $game;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Decision::class)
+     * @ORM\ManyToOne(targetEntity=Behaviour::class)
      */
-    private $previousDecision;
+    private $previousBehaviour;
 
     public function getId(): ?int
     {
@@ -47,14 +48,14 @@ class Agent
         return $this;
     }
 
-    public function getPreviousDecision(): ?Decision
+    public function getPreviousBehaviour(): ?Behaviour
     {
-        return $this->previousDecision;
+        return $this->previousBehaviour;
     }
 
-    public function setPreviousDecision(?Decision $previousDecision): self
+    public function setPreviousBehaviour(?Behaviour $previousBehaviour): self
     {
-        $this->previousDecision = $previousDecision;
+        $this->previousBehaviour = $previousBehaviour;
 
         return $this;
     }

@@ -33,6 +33,11 @@ class PlayerState
     /**
      * @ORM\Column(type="integer")
      */
+    private $maxHealth;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $attack;
 
     /**
@@ -44,6 +49,7 @@ class PlayerState
         Player $player
     ) {
         $this->health = $player->getPlayerStat(PlayerStatConfig::HEALTH_ID)->getComputedLevel();        
+        $this->maxHealth = $player->getPlayerStat(PlayerStatConfig::HEALTH_ID)->getPlayerStatConfig()->getMaxLevel();        
         $this->attack = $player->getPlayerStat(PlayerStatConfig::ATTACK_ID)->getComputedLevel();
         $this->energy = $player->getPlayerStat(PlayerStatConfig::ENERGY_ID)->getComputedLevel();
     }
@@ -73,6 +79,18 @@ class PlayerState
     public function setAttack(int $attack): self
     {
         $this->attack = $attack;
+
+        return $this;
+    }
+
+    public function getMaxHealth(): ?int
+    {
+        return $this->maxHealth;
+    }
+
+    public function setMaxHealth(int $maxHealth): self
+    {
+        $this->maxHealth = $maxHealth;
 
         return $this;
     }

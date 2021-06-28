@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Domain\Jann\Agent\Repository;
+namespace App\Domain\Jann\Behaviour\Repository;
 
 use App\Domain\Common\Type\Position;
 use App\Domain\GameData\Entity\MapTile;
 use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
-use App\Domain\Jann\Agent\Entity\Decision;
+use App\Domain\Jann\Behaviour\Entity\Behaviour;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use App\Domain\Jann\Environment\Entity\TileState;
 use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
@@ -16,23 +16,23 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method Decision|null find($id, $lockMode = null, $lockVersion = null)
- * @method Decision|null findOneBy(array $criteria, array $orderBy = null)
- * @method Decision[]    findAll()
- * @method Decision[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Behaviour|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Behaviour|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Behaviour[]    findAll()
+ * @method Behaviour[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class DecisionRepository extends ServiceEntityRepository
+class BehaviourRepository extends ServiceEntityRepository
 {
     public function __construct(
         private PlayerStateRepository $playerStateRepository,
         private TileStateRepository $tileStateRepository,
         ManagerRegistry $registry
     ) {
-        parent::__construct($registry, Decision::class);
+        parent::__construct($registry, Behaviour::class);
     }
 
     /**
-     * @return Decision[]
+     * @return Behaviour[]
      */
     public function findAvailableMatches(
         PlayerState $playerState,

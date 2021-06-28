@@ -1,19 +1,20 @@
 <?php
 
-namespace App\Domain\Jann\Agent\Entity;
+namespace App\Domain\Jann\Behaviour\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use App\Domain\Jann\Environment\Entity\TileState;
 use App\Domain\Jann\Environment\Entity\ZombieState;
-use App\Repository\Domain\Jann\Agent\Entity\DecisionRepository;
+use App\Domain\Jann\Behaviour\Repository\BehaviourRepository;
+use App\Domain\Jann\NeuralNetworkConfig;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=DecisionRepository::class)
+ * @ORM\Entity(repositoryClass=BehaviourRepository::class)
  */
 #[ApiResource]
-class Decision
+class Behaviour
 {
     /**
      * @ORM\Id
@@ -40,7 +41,7 @@ class Decision
     private $nextPlayerState;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Decision::class)
+     * @ORM\ManyToOne(targetEntity=Behaviour::class)
      * @ORM\JoinColumn(nullable=false)
      */
     private $currentTileState;
@@ -61,19 +62,32 @@ class Decision
     private $attackedZombieStateAfter;
 
     public function __construct(
-        ?TileState $previousTileState,
-        ?TileState $nextTileState,
+        ?TileState $currentTileState,
+        ?TileState $movedToTileState,
         ?PlayerState $previousPlayerState,
         ?PlayerState $nextPlayerState,
         ?ZombieState $attackedZombieStateBefore,
         ?ZombieState $attackedZombieStateAfter,
     ) {
-        $this->previousTileState = $previousTileState;
-        $this->nextTileState = $nextTileState;
+        $this->currentTileState = $currentTileState;
+        $this->movedToTileState = $movedToTileState;
         $this->previousPlayerState = $previousPlayerState;
         $this->nextPlayerState = $nextPlayerState;
         $this->attackedZombieStateBefore = $attackedZombieStateBefore;
         $this->attackedZombieStateAfter = $attackedZombieStateAfter;
+    }
+
+    public function isTypeMove(): bool
+    {
+        return null !== $this->movedToTileState;
+    }
+
+    public function isTypeAttack(): bool
+    {
+        return false === in_array(false, [
+            $this->attackedZombieStateBefore,
+            $this->attackedZombieStateAfter,
+        ]);
     }
 
     public function getId(): ?int
@@ -117,32 +131,55 @@ class Decision
         return $this;
     }
 
-    public function getDecisionValue(): int|null
+    public function getBehaviourReward(): int|null
     {
         if (null === $this->getNextPlayerState()) {
             return null;
         }
 
-        $healthDiff = 
-            $this->getNextPlayerState()->getHealth() -
-            $this->getPreviousPlayerState()->getHealth();
+        $healthReward = (
+            $this->getNextPlayerState()->getMaxHealth() /
+            $this->getPreviousPlayerState()->getHealth()
+        ) * NeuralNetworkConfig::BEHAVIOUR_HEALTH_PRIORITY;
 
-        
-        $zombieDiff = 
+        $killReward = 0;
+        if (
             null !== $this->getAttackedZombieStateBefore() &&
-            null !== $this->getAttackedZombieStateAfter() ? 
-            $this->getAttackedZombieStateBefore()->getCount() -
-            $this->getAttackedZombieStateAfter()->getCount() : 0;
+            null !== $this->getAttackedZombieStateAfter() &&
+            $this->getAttackedZombieStateBefore()->getId() === $this->getAttackedZombieStateAfter()->getId()
+        ) {
+            $killReward = (
+                $this->getAttackedZombieStateBefore()->getCount() -
+                $this->getAttackedZombieStateAfter()->getCount()
+            ) * NeuralNetworkConfig::BEHAVIOUR_KILL_PRIORITY;
+        } 
 
-        return $healthDiff + $zombieDiff;
+        $damageReward = 0;
+        if (
+            null !== $this->getAttackedZombieStateBefore() &&
+            null !== $this->getAttackedZombieStateAfter() &&
+            $this->getAttackedZombieStateBefore()->getId() !== $this->getAttackedZombieStateAfter()->getId()
+        ) {
+            $damageDiff = (
+                $this->getAttackedZombieStateBefore()->getHealth() -
+                $this->getAttackedZombieStateAfter()->getHealth()
+            );
+
+            $damageReward = (                
+                $this->getAttackedZombieStateAfter()->getZombieType()->getHealth() /
+                $damageDiff
+            ) * NeuralNetworkConfig::BEHAVIOUR_DAMAGE_PRIORITY;
+        } 
+
+        return $healthReward + $damageReward + $killReward;
     }
 
-    public function getCurrentTileState(): ?self
+    public function getLevelTileState(): ?self
     {
         return $this->currentTileState;
     }
 
-    public function setCurrentTileState(?self $currentTileState): self
+    public function setLevelTileState(?self $currentTileState): self
     {
         $this->currentTileState = $currentTileState;
 
@@ -183,5 +220,38 @@ class Decision
         $this->attackedZombieStateAfter = $attackedZombieStateAfter;
 
         return $this;
+    }
+
+    public function environmentMatches(Behaviour $behaviour): bool
+    {
+        if (false === in_array(true, [
+            $behaviour->isTypeAttack() === $this->isTypeAttack(),
+            $behaviour->isTypeMove() === $this->isTypeMove(),
+        ])) {
+            return false;
+        }
+
+        if (
+            $behaviour->isTypeAttack() &&
+            (
+                $behaviour->getPreviousPlayerState()->getId() !== $this->getPreviousPlayerState()->getId() ||
+                $behaviour->getLevelTileState()->getId() !== $this->getLevelTileState()->getId()
+            )
+        ) {
+            return false;
+        }
+
+        if (
+            $behaviour->isTypeMove() &&
+            (
+                $behaviour->getPreviousPlayerState()->getId() !== $this->getPreviousPlayerState()->getId() &&
+                $behaviour->getLevelTileState()->getId() !== $this->getLevelTileState()->getId() ||
+                $behaviour->getMovedToTileState()->getId() !== $this->getMovedToTileState()->getId()
+            )
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }

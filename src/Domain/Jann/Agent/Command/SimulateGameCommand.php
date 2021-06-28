@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\GamePlay\Command;
+namespace App\Domain\Jann\Agent\Command;
 
 use App\Domain\GameData\Entity\PlayerStatConfig;
 use App\Domain\GameData\Repository\MapRepository;
@@ -10,6 +10,7 @@ use App\Domain\GameData\Repository\PlayerStatConfigRepository;
 use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\PlayerStat;
+use App\Domain\Jann\Agent\Entity\Agent;
 use App\Domain\Profile\Entity\Profile;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -19,14 +20,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
-    name: 'MapGeneratorCommand',
-    description: 'Generator a new map and persist it to the database',
+    name: 'SimulateGameCommand',
+    description: 'Simulate a game to train Jann',
 )]
 class SimulateGameCommand extends Command
 {
     public const ARG_MAP = "map";
-
-    public const OPT_PLAYERS = "players";
 
     public function __construct(
         private MapRepository $mapRepository,
@@ -39,7 +38,6 @@ class SimulateGameCommand extends Command
     {
         $this
             ->addArgument(self::ARG_MAP, InputOption::VALUE_REQUIRED, "The id of the map to use")
-            ->addOption(self::OPT_PLAYERS, 'p', InputOption::VALUE_OPTIONAL, 'Number of players', 3)
         ;
     }
 
@@ -56,24 +54,22 @@ class SimulateGameCommand extends Command
         );
 
         $profile = new Profile(
-            "Bot"
+            "Jann"
         );
 
-        $playerCount = (int) $input->getOption(self::OPT_PLAYERS);
+        $player = new Player(
+            $profile
+        );
 
-        for ($i = 0; $i < $playerCount;$i++) {
-            $player = new Player(
-                $profile
-            );
-
-            foreach($playerStatConfigs as $playerStatConfig) {
-                $player->addPlayerStat(new PlayerStat(
-                    $playerStatConfig
-                ));
-            }
-
-            $game->addPlayer($player);
+        foreach($playerStatConfigs as $playerStatConfig) {
+            $player->addPlayerStat(new PlayerStat(
+                $playerStatConfig
+            ));
         }
+
+        $game->addPlayer($player);
+
+        $jann = new Agent();
 
         while($game->getLivingPlayers()->count() < 0) {
 

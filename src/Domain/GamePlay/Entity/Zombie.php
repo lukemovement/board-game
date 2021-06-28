@@ -130,6 +130,6 @@ class Zombie implements MovableInterface
                 ->getPlayerStatConfig()->getStatTypeId() === PlayerStatConfig::HEALTH_ID
         )->first();
 
-        $playerHealthStat->setCurrent($playerHealthStat->getCurrent() - $this->getZombieType()->getAttack());
+        $playerHealthStat->setLevel($playerHealthStat->getLevel() - $this->getZombieType()->getAttack());
     }
 }

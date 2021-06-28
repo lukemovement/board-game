@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Jann\Agent\Service;
+namespace App\Domain\Jann\Behaviour\Service;
 
 use App\Domain\Common\Type\Position;
 use App\Domain\GameData\Entity\MapTile;
@@ -11,8 +11,8 @@ use App\Domain\GamePlay\Dto\PathFinderNodeDto;
 use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\Zombie;
-use App\Domain\Jann\Agent\Entity\Decision;
-use App\Domain\Jann\Agent\Repository\DecisionRepository;
+use App\Domain\Jann\Behaviour\Entity\Behaviour;
+use App\Domain\Jann\Behaviour\Repository\BehaviourRepository;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
 use App\Domain\Jann\Environment\Service\TileStateSetupService;
@@ -20,10 +20,10 @@ use App\Domain\Jann\NeuralNetworkConfig;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 
-class DecisionEvaluationService {
+class BehaviourPredictionService {
 
     public function __construct(
-        private DecisionRepository $decisionRepository,
+        private BehaviourRepository $behaviourRepository,
         private PlayerStateRepository $playerStateRepository,
         private EntityManagerInterface $entityManager,
         private TileStateSetupService $tileStateSetupService
@@ -32,7 +32,7 @@ class DecisionEvaluationService {
     private Player $player;
 
     /**
-     * @return Decision[][]
+     * @return Behaviour[][]
      */
     public function execute(
         Player $player
@@ -50,22 +50,24 @@ class DecisionEvaluationService {
 
         $nextTileStates = $this->getAdjacentTiles();
 
-        $availableDecisions = $this->decisionRepository->findAvailableMatches(
+        $availableBehaviours = $this->behaviourRepository->findAvailableMatches(
             $playerState,
             $tileState,
             $nextTileStates
         );
 
-        return $this->walk($availableDecisions)->toArray();
+        return $this->walk($availableBehaviours);
     }
 
     /**
-     * @param Decision[] $decision
+     * @param Behaviour[] $behaviour
+     * 
+     * @return Behaviour[][]
      */
-    public function walk(array $decisions, array $currentPath = [], ArrayCollection $allPaths = null, int $depth = 0)
+    public function walk(array $behaviours, array $currentPath = [], ArrayCollection $allPaths = null, int $depth = 0): array
     {
         if (NeuralNetworkConfig::ENVIRONMENT_SEARCH_DEPTH === $depth) {
-            return $allPaths;
+            return $allPaths->toArray();
         }
 
         if (null === $allPaths) {
@@ -73,21 +75,20 @@ class DecisionEvaluationService {
         }
 
         $depth++;
-
         
-        foreach($decisions as $decision) {
-            // Create array for new decision pathway
+        foreach($behaviours as $behaviour) {
+            // Create array for new behaviour pathway
             $newPath = $currentPath;
-            $newPath[] = $decision;
+            $newPath[] = $behaviour;
             
-            // Add new decision pathway to end result
+            // Add new behaviour pathway to end result
             $allPaths->add($newPath);
 
-            // Execute decision pathway
-            array_walk($newPath, fn(Decision $decision) => $this->updateGame($decision));
+            // Execute behaviour pathway
+            array_walk($newPath, fn(Behaviour $behaviour) => $this->updateGame($behaviour));
             
-            // Get the available decisions based on the new game state
-            $outcomes = $this->predictOutComes($decision);
+            // Get the available behaviours based on the new game state
+            $outcomes = $this->predictOutComes($behaviour);
             
             // Reset the game state
             $this->entityManager->refresh($this->player);
@@ -97,24 +98,25 @@ class DecisionEvaluationService {
             $this->walk($outcomes, $newPath, $allPaths, $depth);
         }
 
-        return $allPaths;
+        return $allPaths->toArray();
     }
 
     /**
-     * @param Decision[] $decisions
+     * @param Behaviour[] $behaviours
      */
-    private function predictOutComes(Decision $decision): array|null
+    private function predictOutComes(Behaviour $behaviour): array|null
     {
-        return $this->decisionRepository->findAvailableMatches(
-            $decision->getNextPlayerState(),
-            $decision->getMovedToTileState() ?? $decision->getCurrentTileState(),
+        return $this->behaviourRepository->findAvailableMatches(
+            $behaviour->getNextPlayerState(),
+            $behaviour->getMovedToTileState() ?? $behaviour->getLevelTileState(),
             $this->getAdjacentTiles()
         );
     }
 
-    private function updateGame(Decision $decision)
+    private function updateGame(Behaviour $behaviour)
     {
-        if (null !== $decision->getMovedToTileState()) {
+        if (null !== $behaviour->getMovedToTileState()) {
+            // Player moved to a new tile
             $currentMapTile = $this->player->getGame()->getMap()->getMapTile(
                 $this->player->getPosition()
             );
@@ -130,17 +132,18 @@ class DecisionEvaluationService {
                     $this->player->setPosition($mapTile->getPosition());
                 }
             });
-        } else if (null !== $decision->getAttackedZombieStateAfter()) {
+        } else if (null !== $behaviour->getAttackedZombieStateAfter()) {
+            // Player killed a zombie
             if (
-                $decision->getAttackedZombieStateBefore()->getCount() !==
-                $decision->getAttackedZombieStateAfter()->getCount()
+                $behaviour->getAttackedZombieStateBefore()->getCount() !==
+                $behaviour->getAttackedZombieStateAfter()->getCount()
             ) {
                 $this->player->getGame()->getZombiesAtPosition(
                     $this->player->getPosition()
-                )->forAll(function(Zombie $zombie) use ($decision) {
+                )->forAll(function(Zombie $zombie) use ($behaviour) {
                     if (
-                        $zombie->getHealth() === $decision->getAttackedZombieStateBefore()->getHealth() &&
-                        $zombie->getZombieType()->getId() === $decision->getAttackedZombieStateBefore()->getZombieType()->getId()
+                        $zombie->getHealth() === $behaviour->getAttackedZombieStateBefore()->getHealth() &&
+                        $zombie->getZombieType()->getId() === $behaviour->getAttackedZombieStateBefore()->getZombieType()->getId()
                     ) {
                         $this->player->getGame()->removeZombie($zombie);
                         return false;
@@ -150,18 +153,19 @@ class DecisionEvaluationService {
                 });
             }
         } else if (
-            $decision->getAttackedZombieStateBefore()->getId() !==
-            $decision->getAttackedZombieStateAfter()->getId()
+            $behaviour->getAttackedZombieStateBefore()->getId() !==
+            $behaviour->getAttackedZombieStateAfter()->getId()
         ) {
+            // Player attacked a zombie and decreased its health
             $this->player->getGame()->getZombiesAtPosition(
                 $this->player->getPosition()
-            )->forAll(function(Zombie $zombie) use ($decision) {
+            )->forAll(function(Zombie $zombie) use ($behaviour) {
                 if (
-                    $zombie->getHealth() === $decision->getAttackedZombieStateBefore()->getHealth() &&
-                    $zombie->getZombieType()->getId() === $decision->getAttackedZombieStateBefore()->getZombieType()->getId()
+                    $zombie->getHealth() === $behaviour->getAttackedZombieStateBefore()->getHealth() &&
+                    $zombie->getZombieType()->getId() === $behaviour->getAttackedZombieStateBefore()->getZombieType()->getId()
                 ) {
                     $zombie->setHealth(
-                        $decision->getAttackedZombieStateAfter()->getHealth()
+                        $behaviour->getAttackedZombieStateAfter()->getHealth()
                     );
                     return false;
                 }
@@ -169,6 +173,8 @@ class DecisionEvaluationService {
                 return true;
             });
         }
+
+        $this->player->getPlayerStat(PlayerStatConfig::ENERGY_ID)->decrease(1);
     }
 
     /**
