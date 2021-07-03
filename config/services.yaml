@@ -18,13 +18,18 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Domain/*/Entity'
+            - '../src/Domain/Jann/*/Entity'
             - '../src/Kernel.php'
             - '../src/Tests/'
 
     App\Domain\GameData\Command\MapGeneratorCommand:
         tags:
-            -  { name: console.command, command: app:map:generate }
+            -  { name: console.command, command: z:map:generate }
 
     App\Domain\GameData\Command\MapRenderCommand:
         tags:
-            -  { name: console.command, command: app:map:render }
+            -  { name: console.command, command: z:map:render }
+
+    App\Domain\Jann\Agent\Command\SimulateGameCommand:
+        tags:
+            - { name: console.command, command: z:jann:simulate }

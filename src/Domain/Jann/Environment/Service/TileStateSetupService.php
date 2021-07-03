@@ -6,8 +6,6 @@ namespace App\Domain\Jann\Environment\Service;
 
 use App\Domain\Common\Type\Position;
 use App\Domain\GamePlay\Entity\Game;
-use App\Domain\GamePlay\Entity\Player;
-use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\Jann\Environment\Entity\TileState;
 use App\Domain\Jann\Environment\Entity\ZombieState;
 use App\Domain\Jann\Environment\Repository\TileStateRepository;
@@ -18,7 +16,7 @@ class TileStateSetupService {
 
     public function __construct(
         private ZombieStateRepository $zombieStateRepository,
-        private TileStateRepository $tileStateRepository
+        private TileStateRepository $tileStateRepository,
     ) {}
 
     public function execute(
@@ -53,6 +51,9 @@ class TileStateSetupService {
             $zombieStates = $filteredZombieStates;
         }
 
-        return $this->tileStateRepository->findOrCreate($zombieStates);
+        $tileState = $this->tileStateRepository->findOrCreate($zombieStates);
+
+        
+        return $tileState;
     }
 }

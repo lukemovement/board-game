@@ -13,8 +13,10 @@ class BehaviourAnalysisService {
     private ArrayCollection $allBehaviours;
     /**
      * @param Behaviour[][] $behaviourPredictions
+     * 
+     * @return DecisionDto[][]
      */
-    public function execute(array $behaviourPredictions)
+    public function execute(array $behaviourPredictions): array
     {
         $this->allBehaviours = new ArrayCollection(...$behaviourPredictions);
 
@@ -29,7 +31,7 @@ class BehaviourAnalysisService {
 
                 return $decision;
             }); 
-        });
+        })->toArray();
     }
 
     private function calculateBehaviourTrust(Behaviour $selectedBehaviour)

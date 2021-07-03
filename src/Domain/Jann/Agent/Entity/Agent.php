@@ -31,6 +31,10 @@ class Agent
      */
     private $previousBehaviour;
 
+    public function __construct(Game $game) {
+        $this->game = $game;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

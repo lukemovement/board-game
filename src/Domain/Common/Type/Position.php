@@ -40,7 +40,7 @@ class Position {
     {
         return new Position([
             $this->column,
-            $this->row + 1
+            $this->row - 1
         ]);
     }
 
@@ -48,7 +48,7 @@ class Position {
     {
         return new Position([
             $this->column,
-            $this->row - 1
+            $this->row + 1
         ]);
     }
 

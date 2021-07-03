@@ -41,7 +41,7 @@ class Behaviour
     private $nextPlayerState;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Behaviour::class)
+     * @ORM\ManyToOne(targetEntity=TileState::class)
      * @ORM\JoinColumn(nullable=false)
      */
     private $currentTileState;
@@ -62,10 +62,10 @@ class Behaviour
     private $attackedZombieStateAfter;
 
     public function __construct(
-        ?TileState $currentTileState,
+        TileState $currentTileState,
         ?TileState $movedToTileState,
-        ?PlayerState $previousPlayerState,
-        ?PlayerState $nextPlayerState,
+        PlayerState $previousPlayerState,
+        PlayerState $nextPlayerState,
         ?ZombieState $attackedZombieStateBefore,
         ?ZombieState $attackedZombieStateAfter,
     ) {
@@ -75,6 +75,7 @@ class Behaviour
         $this->nextPlayerState = $nextPlayerState;
         $this->attackedZombieStateBefore = $attackedZombieStateBefore;
         $this->attackedZombieStateAfter = $attackedZombieStateAfter;
+        $this->linkCount = 0;
     }
 
     public function isTypeMove(): bool
@@ -100,9 +101,9 @@ class Behaviour
         return $this->linkCount;
     }
 
-    public function setLinkCount(int $linkCount): self
+    public function increaseLinkCount(): self
     {
-        $this->linkCount = $linkCount;
+        $this->linkCount = $this->linkCount + 1;
 
         return $this;
     }
@@ -174,12 +175,12 @@ class Behaviour
         return $healthReward + $damageReward + $killReward;
     }
 
-    public function getLevelTileState(): ?self
+    public function getPreviousTileState(): ?TileState
     {
         return $this->currentTileState;
     }
 
-    public function setLevelTileState(?self $currentTileState): self
+    public function setPreviousTileState(?self $currentTileState): self
     {
         $this->currentTileState = $currentTileState;
 
@@ -235,7 +236,7 @@ class Behaviour
             $behaviour->isTypeAttack() &&
             (
                 $behaviour->getPreviousPlayerState()->getId() !== $this->getPreviousPlayerState()->getId() ||
-                $behaviour->getLevelTileState()->getId() !== $this->getLevelTileState()->getId()
+                $behaviour->getPreviousTileState()->getId() !== $this->getPreviousTileState()->getId()
             )
         ) {
             return false;
@@ -245,7 +246,7 @@ class Behaviour
             $behaviour->isTypeMove() &&
             (
                 $behaviour->getPreviousPlayerState()->getId() !== $this->getPreviousPlayerState()->getId() &&
-                $behaviour->getLevelTileState()->getId() !== $this->getLevelTileState()->getId() ||
+                $behaviour->getPreviousTileState()->getId() !== $this->getPreviousTileState()->getId() ||
                 $behaviour->getMovedToTileState()->getId() !== $this->getMovedToTileState()->getId()
             )
         ) {

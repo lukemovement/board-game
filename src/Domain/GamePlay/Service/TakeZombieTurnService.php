@@ -6,6 +6,7 @@ use App\Domain\GamePlay\Dto\PathFinderNodeDto;
 use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\Zombie;
+use App\Domain\GamePlay\GamePlayConfig;
 use App\Domain\GamePlay\Repository\PlayerRepository;
 use App\Domain\GamePlay\Repository\ZombieRepository;
 
@@ -15,8 +16,6 @@ class TakeZombieTurnService {
 
     public function __construct(
         private ChanceGeneratorService $chanceGeneratorService,
-        private ZombieRepository $zombieRepository,
-        private PlayerRepository $playerRepository
     ) {}
 
     public function execute(
@@ -37,7 +36,6 @@ class TakeZombieTurnService {
             $player = array_rand($localPlayers->toArray())[0];
 
             $zombie->attackPlayer($player);
-            $this->playerRepository->add($player);
         });
     }
 
@@ -71,7 +69,7 @@ class TakeZombieTurnService {
         if (null !== $nextNode) {
             $zombie->setPosition($nextNode->destination->getPosition());
         } else {
-            $shouldMove = $this->chanceGeneratorService->execute(1, 3);
+            $shouldMove = $this->chanceGeneratorService->execute(GamePlayConfig::ZOMBIE_MOVE_CHANCE, GamePlayConfig::ZOMBIE_MOVE_CHANCE_OUTOF);
     
             if ($shouldMove) {
                 /** @var PathFinderNodeDto $nextNode */
@@ -84,7 +82,5 @@ class TakeZombieTurnService {
     
             $zombie->setPosition($nextNode->destination->getPosition());
         }
-
-        $this->zombieRepository->add($zombie);
     }
 }

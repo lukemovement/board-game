@@ -90,7 +90,6 @@ class MapTile
             $tiles->add($this->map->getMapTile($this->position->up()));
         }
 
-
         if ($this->tile->getCanExitLeft()) {
             $tiles->add($this->map->getMapTile($this->position->left()));
         }
@@ -102,7 +101,7 @@ class MapTile
         if ($this->tile->getCanExitBottom()) {
             $tiles->add($this->map->getMapTile($this->position->down()));
         }
-
+        
         return $tiles;
     }
 

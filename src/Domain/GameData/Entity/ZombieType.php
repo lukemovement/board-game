@@ -48,17 +48,44 @@ class ZombieType
     private $speed;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer")
      */
     private $vision;
 
     /**
-     * @ORM\OneToMany(targetEntity=Zombie::class, mappedBy="zombieType", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Zombie::class, mappedBy="zombieType")
      */
     private $zombies;
 
-    public function __construct()
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $minRound;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $maxRound;
+
+    public function __construct(
+        string $name,
+        string $description,
+        int $attack,
+        int $health,
+        int $speed,
+        int $vision,
+        int $minRound,
+        int $maxRound
+    )
     {
+        $this->name = $name;
+        $this->description = $description;
+        $this->attack = $attack;
+        $this->health = $health;
+        $this->speed = $speed;
+        $this->vision = $vision;
+        $this->minRound = $minRound;
+        $this->maxRound = $maxRound;
         $this->zombies = new ArrayCollection();
     }
 
@@ -165,6 +192,30 @@ class ZombieType
                 $zombie->setZombieType(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getMinRound(): ?int
+    {
+        return $this->minRound;
+    }
+
+    public function setMinRound(int $minRound): self
+    {
+        $this->minRound = $minRound;
+
+        return $this;
+    }
+
+    public function getMaxRound(): ?int
+    {
+        return $this->maxRound;
+    }
+
+    public function setMaxRound(int $maxRound): self
+    {
+        $this->maxRound = $maxRound;
 
         return $this;
     }

@@ -165,10 +165,7 @@ class Map
 
     public function getMapTile(Position $position): MapTile
     {
-        $tileIndex = ($this->columns * $position->getRow()) 
-            + $position->getColumn();
-
-        return $this->getMapTiles()->get($tileIndex);
+        return $this->getMapTiles()->filter(fn(MapTile $mapTile) => $mapTile->getPosition()->matches($position))->first();
     }
 
     /**

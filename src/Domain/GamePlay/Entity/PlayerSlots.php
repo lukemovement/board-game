@@ -20,7 +20,7 @@ class PlayerSlots
     private $id;
 
     /**
-     * @ORM\OneToOne(targetEntity=Player::class, mappedBy="playerSlots", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=Player::class, inversedBy="playerSlots")
      */
     private $player;
 

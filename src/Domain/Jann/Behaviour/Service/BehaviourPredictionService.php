@@ -15,6 +15,7 @@ use App\Domain\Jann\Behaviour\Entity\Behaviour;
 use App\Domain\Jann\Behaviour\Repository\BehaviourRepository;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
+use App\Domain\Jann\Environment\Repository\TileStateRepository;
 use App\Domain\Jann\Environment\Service\TileStateSetupService;
 use App\Domain\Jann\NeuralNetworkConfig;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -26,7 +27,8 @@ class BehaviourPredictionService {
         private BehaviourRepository $behaviourRepository,
         private PlayerStateRepository $playerStateRepository,
         private EntityManagerInterface $entityManager,
-        private TileStateSetupService $tileStateSetupService
+        private TileStateSetupService $tileStateSetupService,
+        private TileStateRepository $tileStateRepository
     ) {}
 
     private Player $player;
@@ -42,10 +44,9 @@ class BehaviourPredictionService {
 
         $playerState = $this->playerStateRepository->findOrCreate($player);
 
-        $tileState = $this->tileStateRepository->findOrCreate(
-            $this->player->getgame()->getZombiesAtPosition(
-                $player->getPosition()
-            )
+        $tileState = $this->tileStateSetupService->execute(
+            $this->player->getGame(),
+            $this->player->getPosition()
         );
 
         $nextTileStates = $this->getAdjacentTiles();
@@ -108,7 +109,7 @@ class BehaviourPredictionService {
     {
         return $this->behaviourRepository->findAvailableMatches(
             $behaviour->getNextPlayerState(),
-            $behaviour->getMovedToTileState() ?? $behaviour->getLevelTileState(),
+            $behaviour->getMovedToTileState() ?? $behaviour->getPreviousTileState(),
             $this->getAdjacentTiles()
         );
     }
@@ -182,10 +183,10 @@ class BehaviourPredictionService {
      */
     private function getAdjacentTiles(): ArrayCollection
     {
-        return $this->player->getgame()->getMap()->getMapTile(
+        return $this->player->getGame()->getMap()->getMapTile(
             $this->player->getPosition()
         )->getAdjacentTiles()->map(fn(MapTile $mapTile) => $this->tileStateRepository->findOrCreate(
-            $this->player->getgame()->getZombiesAtPosition(
+            $this->player->getGame()->getZombiesAtPosition(
                 $mapTile->getPosition()
             )
         ));

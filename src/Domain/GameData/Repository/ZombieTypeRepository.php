@@ -31,8 +31,8 @@ class ZombieTypeRepository extends ServiceEntityRepository
         }
         
         return $this->createQueryBuilder("zombieType")
-            ->where("zombie.maxRound > :ROUND")
-            ->orWhere("zombie.minRound <= :ROUND")
+            ->where("zombieType.maxRound > :ROUND")
+            ->andWhere("zombieType.minRound <= :ROUND")
             ->setParameters([
                 ":ROUND" => $round
             ])

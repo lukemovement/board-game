@@ -32,7 +32,7 @@ class Player implements MovableInterface
     private $game;
 
     /**
-     * @ORM\OneToMany(targetEntity=PlayerStat::class, mappedBy="player", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=PlayerStat::class, mappedBy="player", cascade={ "persist", "remove" })
      */
     private $playerStats;
 
@@ -53,13 +53,12 @@ class Player implements MovableInterface
     private $takenTurn = false;
 
     /**
-     * @ORM\OneToMany(targetEntity=PlayerItem::class, mappedBy="player", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=PlayerItem::class, mappedBy="player", cascade={ "persist", "remove" })
      */
     private $playerItems;
 
     /**
-     * @ORM\OneToOne(targetEntity=PlayerSlots::class, inversedBy="player", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity=PlayerSlots::class, mappedBy="player", cascade={"persist", "remove"})
      */
     private $playerSlots;
 
@@ -71,6 +70,7 @@ class Player implements MovableInterface
         $this->playerStats = new ArrayCollection();
         $this->position = new Position([0,0]);
         $this->playerItems = new ArrayCollection();
+        $this->playerSlots = new PlayerSlots();
     }
 
     public function getId(): ?int

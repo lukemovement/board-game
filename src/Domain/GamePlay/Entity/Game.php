@@ -32,7 +32,7 @@ class Game
     private $id;
 
     /**
-     * @ORM\OneToMany(targetEntity=Player::class, mappedBy="game", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Player::class, mappedBy="game", cascade={ "persist", "remove" })
      */
     private $players;
 
@@ -48,7 +48,7 @@ class Game
     private $map;
 
     /**
-     * @ORM\OneToMany(targetEntity=Zombie::class, mappedBy="game", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Zombie::class, mappedBy="game", cascade={ "persist", "remove" })
      */
     private $zombies;
 
@@ -134,6 +134,13 @@ class Game
     public function setRound(int $round): self
     {
         $this->round = $round;
+
+        return $this;
+    }
+
+    public function increaseRound(): self
+    {
+        $this->round++;
 
         return $this;
     }
@@ -258,7 +265,7 @@ class Game
         return $this;
     }
 
-    public function isDay()
+    public function isDay(): bool
     {
         $round = 0;
         while(true) {
@@ -277,7 +284,7 @@ class Game
         }
     }
 
-    public function getZombieHealthModifier()
+    public function getZombieHealthModifier(): int
     {
         return ceil(
             $this->round *
@@ -285,7 +292,7 @@ class Game
         );
     }
 
-    public function getMaxZombies()
+    public function getMaxZombies(): int
     {
         return ceil(
             (

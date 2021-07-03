@@ -9,6 +9,7 @@ use App\Domain\GamePlay\Entity\Player;
 use App\Domain\Jann\Behaviour\Entity\Behaviour;
 use App\Domain\Jann\Environment\Entity\PlayerState;
 use App\Domain\Jann\Environment\Entity\TileState;
+use App\Domain\Jann\Environment\Entity\ZombieState;
 use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
 use App\Domain\Jann\Environment\Repository\TileStateRepository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -42,9 +43,11 @@ class BehaviourRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder("d")
             ->where("d.previousPlayerState = :PLAYER_STATE")
-            ->where("d.currentTileState = :TILE_STATE")
-            ->where("d.movedToTileState IN (:NEXT_TILE_STATES)")
+            ->andWhere("d.currentTileState = :TILE_STATE")
+            ->andWhere("d.movedToTileState IN (:NEXT_TILE_STATES)")
             ->orWhere("d.attackedZombieStateBefore IN (:ZOMBIE_STATES)")
+            ->andWhere("d.previousPlayerState = :PLAYER_STATE")
+            ->andWhere("d.currentTileState = :TILE_STATE")
             ->setParameters([
                 ":PLAYER_STATE" => $playerState,
                 ":TILE_STATE" => $tileState,
@@ -53,5 +56,42 @@ class BehaviourRepository extends ServiceEntityRepository
             ])
             ->getQuery()
             ->getResult();
+    }
+
+    public function createOrIncreaseLinkCount(
+        TileState $currentTileState,
+        ?TileState $movedToTileState,
+        PlayerState $previousPlayerState,
+        PlayerState $nextPlayerState,
+        ?ZombieState $attackedZombieStateBefore,
+        ?ZombieState $attackedZombieStateAfter,
+    ): Behaviour
+    {
+        $match = $this->findOneBy([
+            "currentTileState" => $currentTileState,
+            "movedToTileState" => $movedToTileState,
+            "previousPlayerState" => $previousPlayerState,
+            "nextPlayerState" => $nextPlayerState,
+            "attackedZombieStateBefore" => $attackedZombieStateBefore,
+            "attackedZombieStateAfter" => $attackedZombieStateAfter,
+        ]);
+
+        if (null === $match) {
+            $match = new Behaviour(
+                $currentTileState,
+                $movedToTileState,
+                $previousPlayerState,
+                $nextPlayerState,
+                $attackedZombieStateBefore,
+                $attackedZombieStateAfter,
+            );
+        }
+
+        $match->increaseLinkCount();
+
+        $this->_em->persist($match);
+        $this->_em->flush();
+
+        return $match;
     }
 }
