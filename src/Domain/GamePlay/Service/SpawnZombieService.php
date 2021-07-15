@@ -19,6 +19,10 @@ class SpawnZombieService {
 
     public function execute(Game $game)
     {
+        if (false === $game->isDay()) {
+            return;
+        }
+
         $zombieCount = $game->getZombies()->count();
         $maxZombies = $game->getMaxZombies();
         $zombieTypes = $this->zombieTypeRepository->findZombieTypesForRound($game);
@@ -27,8 +31,8 @@ class SpawnZombieService {
             $zombie = new Zombie(
                 $game,
                 new Position([
-                    rand(0, $game->getMap()->getColumns()),
-                    rand(0, $game->getMap()->getRows()),
+                    rand(0, $game->getMap()->getColumns() - 1),
+                    rand(0, $game->getMap()->getRows() - 1),
                 ]),
                 $zombieTypes[array_rand($zombieTypes)]
             );

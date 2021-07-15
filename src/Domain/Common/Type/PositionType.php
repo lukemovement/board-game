@@ -26,7 +26,7 @@ class PositionType extends Type
     /** @param Position $value */
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
-        return json_encode([$value->getRow(), $value->getColumn()]);
+        return json_encode([$value->getColumn(), $value->getRow()]);
     }
 
     public function getName()

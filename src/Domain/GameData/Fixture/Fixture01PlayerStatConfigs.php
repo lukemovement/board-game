@@ -39,8 +39,8 @@ class Fixture01PlayerStatConfigs extends Fixture implements ORMFixtureInterface
             PlayerStatConfig::ENERGY_ID,
             "Energy",
             5,
-            3,
-            3,
+            2,
+            2,
             1
         );
         $manager->persist($energy);

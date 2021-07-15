@@ -72,11 +72,17 @@ class Game
      */
     private $difficulty = 0.20;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $moveCount;
+
     public function __construct(
         Map $map
     )
     {
         $this->map = $map;
+        $this->moveCount = 0;
 
         $this->players = new ArrayCollection();
         $this->zombies = new ArrayCollection();
@@ -138,9 +144,26 @@ class Game
         return $this;
     }
 
-    public function increaseRound(): self
+    public function nextRound(): self
     {
         $this->round++;
+
+        $this->players->forAll(function(int $i, Player $player) {
+            if (false === $player->isAlive()) {
+                return true;
+            }
+
+            $player->getPlayerStats()->forAll(function(int $i, PlayerStat $playerStat) {
+                $playerStat->setLevel(
+                    $playerStat->getLevel() + 
+                    $playerStat->getPlayerStatConfig()->getRegenerationRate()
+                );
+
+                return true;
+            });
+
+            return true;
+        });
 
         return $this;
     }
@@ -190,8 +213,12 @@ class Game
     /**
      * @return ArrayCollection|Player[]
      */
-    public function getPlayersAtPosition(Position $position): ArrayCollection 
+    public function getPlayersAtPosition(MapTile|Position $position): ArrayCollection 
     {
+        if ($position instanceof MapTile) {
+            $position = $position->getPosition();
+        }
+        
         return $this->players->filter(fn(Player $player) => $player->getPosition()->matches($position));
     }
 
@@ -206,8 +233,12 @@ class Game
     /**
      * @return ArrayCollection|Zombie[]
      */
-    public function getZombiesAtPosition(Position $position): ArrayCollection 
+    public function getZombiesAtPosition(MapTile|Position $position): ArrayCollection 
     {
+        if ($position instanceof MapTile) {
+            $position = $position->getPosition();
+        }
+
         return $this->zombies->filter(fn(Zombie $player) => $player->getPosition()->matches($position));
     }
 
@@ -368,7 +399,6 @@ class Game
                 $node = new PathFinderNodeDto();
 
                 $node->destination = $mapTile;
-                $route->add($mapTile);
                 $node->route = $route;
 
                 $availableMoves->add($node);
@@ -383,5 +413,17 @@ class Game
         );
 
         return $availableMoves;
+    }
+
+    public function getMoveCount(): ?int
+    {
+        return $this->moveCount;
+    }
+
+    public function increaseMoveCount(): self
+    {
+        $this->moveCount = $this->moveCount + 1;
+
+        return $this;
     }
 }

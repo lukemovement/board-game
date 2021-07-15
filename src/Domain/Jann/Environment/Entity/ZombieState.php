@@ -4,6 +4,7 @@ namespace App\Domain\Jann\Environment\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Domain\GameData\Entity\ZombieType;
+use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\Jann\Environment\Repository\ZombieStateRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -43,9 +44,15 @@ class ZombieState
      */
     private $count;
 
-    public function __construct()
+    public function __construct(
+        Zombie $zombie,
+        int $count
+    )
     {
+        $this->health = $zombie->getHealth();
+        $this->zombieType = $zombie->getZombieType();
         $this->tileStates = new ArrayCollection();
+        $this->count = $count;
     }
 
     public function getId(): ?int

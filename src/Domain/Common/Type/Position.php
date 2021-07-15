@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Domain\Common\Type;
-
 class Position {
     
     private string $column; // Left to right

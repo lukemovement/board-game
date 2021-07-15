@@ -11,6 +11,7 @@ use App\Domain\Profile\Entity\Profile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 
 /**
  * @ORM\Entity(repositoryClass=PlayerRepository::class)
@@ -62,6 +63,11 @@ class Player implements MovableInterface
      */
     private $playerSlots;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $moveCount;
+
     public function __construct(
         Profile $profile
     )
@@ -71,6 +77,7 @@ class Player implements MovableInterface
         $this->position = new Position([0,0]);
         $this->playerItems = new ArrayCollection();
         $this->playerSlots = new PlayerSlots();
+        $this->moveCount = 0;
     }
 
     public function getId(): ?int
@@ -215,5 +222,17 @@ class Player implements MovableInterface
             fn(PlayerStat $playerStat) => $playerStat->getPlayerStatConfig()
                 ->getStatTypeId() === $statTypeId
         )->first();
+    }
+
+    public function getMoveCount(): ?int
+    {
+        return $this->moveCount;
+    }
+
+    public function increaseMoveCount(): self
+    {
+        $this->moveCount = $this->moveCount + 1;
+
+        return $this;
     }
 }

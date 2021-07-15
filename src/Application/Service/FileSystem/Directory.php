@@ -10,7 +10,11 @@ class Directory {
 
     public function __construct(
         private string $path
-    ) {}
+    ) {
+        if (false === file_exists($this->path)) {
+            mkdir($path, 0777, true);
+        }
+    }
 
     public function getFile(
         string $name

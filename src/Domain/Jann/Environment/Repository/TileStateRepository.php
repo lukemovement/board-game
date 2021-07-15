@@ -2,6 +2,7 @@
 
 namespace App\Domain\Jann\Environment\Repository;
 
+use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\Jann\Environment\Entity\TileState;
 use App\Domain\Jann\Environment\Entity\ZombieState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -17,6 +18,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class TileStateRepository extends ServiceEntityRepository
 {
     public function __construct(
+        private ZombieStateRepository $zombieStateRepository,
         ManagerRegistry $registry,
     )
     {
@@ -25,11 +27,6 @@ class TileStateRepository extends ServiceEntityRepository
 
     public function findOrCreate(ArrayCollection $zombies): TileState
     {
-        // $queryBuilder = $this->createQueryBuilder("tileState")
-        //     ->join("tileState.zombieStates", "zombieState")
-        //     ->where("zombieState.id IN (:ZOMBIE_LINKS)")
-        //     ->andWhere("COUNT(zombieState) = (:ZOMBIE_LINKS_COUNT)");
-
         $zombieStateClass = ZombieState::class;
         $tileStateClass = TileState::class;
 
@@ -62,7 +59,9 @@ class TileStateRepository extends ServiceEntityRepository
 
         $tileState = new TileState();
 
-        $zombies->forAll(fn(int $i, ZombieState $zombieState) => $tileState->addZombieState($zombieState));
+        $zombies->forAll(fn(int $i, ZombieState $zombieState) => $tileState->addZombieState(
+            $zombieState
+        ));
 
         $this->_em->persist($tileState);
         $this->_em->flush($tileState);

@@ -11,14 +11,17 @@ use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\PlayerStat;
 use App\Domain\GamePlay\Entity\Zombie;
+use App\Domain\GamePlay\Repository\GameRepository;
 use App\Domain\GamePlay\Service\MovePlayerService;
 use App\Domain\GamePlay\Service\PlayerAttackZombieService;
 use App\Domain\GamePlay\Service\SpawnZombieService;
+use App\Domain\GamePlay\Service\TakeZombieTurnService;
 use App\Domain\Jann\Agent\Dto\DecisionDto;
 use App\Domain\Jann\Agent\Entity\Agent;
 use App\Domain\Jann\Agent\Service\DecisionExecutionService;
 use App\Domain\Jann\Agent\Service\DecisionPickerService;
 use App\Domain\Jann\Agent\Service\RandomExecutionService;
+use App\Domain\Jann\Agent\Service\RenderGameService;
 use App\Domain\Jann\Behaviour\Entity\Behaviour;
 use App\Domain\Jann\Behaviour\Repository\BehaviourRepository;
 use App\Domain\Jann\Behaviour\Service\BehaviourAnalysisService;
@@ -41,24 +44,22 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class SimulateGameCommand extends Command
 {
-    public const ARG_MAP = "map";
+    public const ARG_GAME = "game";
 
     public function __construct(
-        private MapRepository $mapRepository,
-        private PlayerStatConfigRepository $playerStatConfigRepository,
         private SpawnZombieService $spawnZombieService,
         private BehaviourAnalysisService $behaviourAnalysisService,
         private BehaviourPredictionService $behaviourPredictionService,
         private TileStateSetupService $tileStateSetupService,
         private DecisionPickerService $decisionPickerService,
-        private MovePlayerService $movePlayerService,
-        private PlayerAttackZombieService $playerAttackZombieService,
-        private ZombieStateRepository $zombieStateRepository,
         private DecisionExecutionService $decisionExecutionService,
         private PlayerStateRepository $playerStateRepository,
         private BehaviourRepository $behaviourRepository,
         private RandomExecutionService $randomExecutionService,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private GameRepository $gameRepository,
+        private RenderGameService $renderGameService,
+        private TakeZombieTurnService $takeZombieTurnService
     ) {
         parent::__construct();
     }
@@ -66,7 +67,7 @@ class SimulateGameCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument(self::ARG_MAP, InputOption::VALUE_REQUIRED, "The id of the map to use")
+            ->addArgument(self::ARG_GAME, InputOption::VALUE_REQUIRED, "The id of the game to use")
         ;
     }
 
@@ -74,57 +75,27 @@ class SimulateGameCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $map = $this->mapRepository->find($input->getArgument(self::ARG_MAP));
+        $game = $this->gameRepository->find($input->getArgument(self::ARG_GAME));
 
-        $playerStatConfigs = $this->playerStatConfigRepository->findAll();
+        $player = $game->getPlayers()->get(0);
 
-        $game = new Game(
-            $map
-        );
+        $this->spawnZombieService->execute($game);
 
         $this->entityManager->persist($game);
 
-        $profile = new Profile(
-            "Jann"
-        );
+        $file = $this->renderGameService->execute($game, $player);
+        $io->writeln("Move output: "  . $file->getPath());
 
-        $this->entityManager->persist($profile);
-
-        $player = new Player(
-            $profile
-        );
-
-        $this->entityManager->persist($player);
-
-        foreach($playerStatConfigs as $playerStatConfig) {
-            $player->addPlayerStat(new PlayerStat(
-                $playerStatConfig
-            ));
-        }
-
-        $game->addPlayer($player);
-
-        $jann = new Agent($game);
-
-        $nightStarted = false;
-
-        while($game->getLivingPlayers()->count() > 0) {
-            if (
-                false === $game->isDay() &&
-                false === $nightStarted
-            ) {
-                $nightStarted = true;
-
-                $this->spawnZombieService->execute($game);
-            } else {
-                $nightStarted = false;
-            }
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+        
+        while($player->getPlayerStat(PlayerStatConfig::ENERGY_ID)->getComputedLevel() > 0) {
 
             $behaviours = $this->behaviourPredictionService->execute($player);
             $decisionsCollections = $this->behaviourAnalysisService->execute($behaviours);
             $decision = $this->decisionPickerService->execute($decisionsCollections);
 
-            if (null === $decision) {
+            if (null === /*$decision*/ null) {
                 $this->randomExecutionService->execute($player);
             } else {
                 $previousTileState = $this->tileStateSetupService->execute($game, $player->getPosition());
@@ -145,11 +116,26 @@ class SimulateGameCommand extends Command
                 );            
             }
             
-            $game->increaseRound();
-
             $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            $file = $this->renderGameService->execute($game, $player);
+            $io->writeln("Move output: "  . $file->getPath());
         }
-        
+
+        $this->takeZombieTurnService->execute($game);
+
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+
+        $game->increaseMoveCount();
+        $file = $this->renderGameService->execute($game, $player);
+        $io->writeln("Move output: "  . $file->getPath());
+
+        $game->nextRound();
+
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+
         return Command::SUCCESS;
     }
 }

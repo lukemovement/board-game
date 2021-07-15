@@ -33,6 +33,9 @@ class PlayerAttackZombieService {
                 $zombie->getHealth() - $playerAttack
             );
         }
+
+        $player->getPlayerStat(PlayerStatConfig::ENERGY_ID)->decrease(1);
+        $player->getGame()->increaseMoveCount();
     }
 
 }

@@ -75,6 +75,10 @@ class PlayerStat
     {
         $this->level = $level;
 
+        if ($this->level > $this->getPlayerStatConfig()->getMaxLevel()) {
+            $this->level = $this->getPlayerStatConfig()->getMaxLevel();
+        }
+
         return $this;
     }
 

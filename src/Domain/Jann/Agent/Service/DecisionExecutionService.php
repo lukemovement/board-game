@@ -6,9 +6,18 @@ namespace App\Domain\Jann\Agent\Service;
 
 use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\Zombie;
+use App\Domain\GamePlay\Service\MovePlayerService;
+use App\Domain\GamePlay\Service\PlayerAttackZombieService;
 use App\Domain\Jann\Agent\Dto\DecisionDto;
+use App\Domain\Jann\Environment\Service\TileStateSetupService;
 
 class DecisionExecutionService {
+
+    public function __construct(
+        private TileStateSetupService $tileStateSetupService,
+        private MovePlayerService $movePlayerService,
+        private PlayerAttackZombieService $playerAttackZombieService
+    ) {}
 
     public function execute(
         DecisionDto $decision,

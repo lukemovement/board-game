@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Jann\Agent\Service;
 
 use App\Domain\Jann\Agent\Dto\DecisionDto;
+use App\Domain\Jann\NeuralNetworkConfig;
 
 class DecisionPickerService {
 
@@ -43,7 +44,7 @@ class DecisionPickerService {
                 ];
             }
 
-            $requiredTrust = ($maxChance - $minChance) / 100 * 60;
+            $requiredTrust = ($maxChance - $minChance) / 100 * NeuralNetworkConfig::DECISION_MINIMUM_TRUST_PERCENTAGE;
             $selectedDecisionCollection = null;
 
             foreach ($decisionsCollections as $trust => $decisionsCollection) {

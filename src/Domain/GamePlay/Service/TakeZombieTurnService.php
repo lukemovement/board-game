@@ -2,6 +2,7 @@
 
 namespace App\Domain\GamePlay\Service;
 
+use App\Domain\GameData\Entity\MapTile;
 use App\Domain\GamePlay\Dto\PathFinderNodeDto;
 use App\Domain\GamePlay\Entity\Game;
 use App\Domain\GamePlay\Entity\Player;
@@ -9,6 +10,8 @@ use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\GamePlay\GamePlayConfig;
 use App\Domain\GamePlay\Repository\PlayerRepository;
 use App\Domain\GamePlay\Repository\ZombieRepository;
+use Exception;
+use Throwable;
 
 class TakeZombieTurnService {
 
@@ -24,18 +27,20 @@ class TakeZombieTurnService {
     {
         $this->game = $game;
 
-        $this->game->getZombies()->forAll(function(Zombie $zombie)
+        $this->game->getZombies()->forAll(function(int $i, Zombie $zombie)
         {
             $localPlayers = $this->game->getPlayersAtPosition($zombie->getPosition());
 
             if ($localPlayers->isEmpty()) {
                 $this->moveTowardsTarget($zombie);
-                return;
+                return true;
             }
 
-            $player = array_rand($localPlayers->toArray())[0];
+            $player = $localPlayers[array_rand($localPlayers->toArray())];
 
             $zombie->attackPlayer($player);
+
+            return true;
         });
     }
 
@@ -60,27 +65,40 @@ class TakeZombieTurnService {
             fn(
                 PathFinderNodeDto $a,
                 PathFinderNodeDto $b
-            ) => $a->route->count() < $b->route->count()
+            ) => $a->route->count() === $b->route->count() ? 0 : ($a->route->count() > $b->route->count() ? 1 : -1)
         );
             
-        /** @var PathFinderNodeDto|null $nextNode */
-        $nextNode = sizeof($movesToPlayers) !== 0 ? $movesToPlayers[0] : null;
+        /** @var PathFinderNodeDto|null $playerRoute */
+        $playerRoute = sizeof($movesToPlayers) !== 0 ? $movesToPlayers[0] : null;
 
-        if (null !== $nextNode) {
-            $zombie->setPosition($nextNode->destination->getPosition());
-        } else {
-            $shouldMove = $this->chanceGeneratorService->execute(GamePlayConfig::ZOMBIE_MOVE_CHANCE, GamePlayConfig::ZOMBIE_MOVE_CHANCE_OUTOF);
-    
-            if ($shouldMove) {
-                /** @var PathFinderNodeDto $nextNode */
-                $nextNode = array_rand(
-                    $this->game->map->getMapTile($zombie->getPosition())
-                        ->getAdjacentTiles()
-                        ->toArray()
-                );
+        if (null !== $playerRoute) {
+            if ($playerRoute->route->isEmpty()) {
+                $position = $playerRoute->destination->getPosition();
+            } else {
+                /** @var PathFinderNodeDto|null $firstStep */
+                $firstStep = $playerRoute->route->get(0);
+                $position = $firstStep->destination->getPosition();
             }
-    
-            $zombie->setPosition($nextNode->destination->getPosition());
+
+            $zombie->setPosition($position);
+            return;
+        }
+
+        $shouldMove = $this->chanceGeneratorService->execute(GamePlayConfig::ZOMBIE_MOVE_CHANCE, GamePlayConfig::ZOMBIE_MOVE_CHANCE_OUTOF);
+
+        if ($shouldMove) {
+            /** @var MapTile[] $availableMoves */
+            $availableMoves = $this->game->getMap()->getMapTile($zombie->getPosition())
+                ->getAdjacentTiles()
+                ->toArray();
+                
+            $nextNodeIndex = array_rand(
+                $availableMoves
+            );
+
+            $mapTile = $availableMoves[$nextNodeIndex];
+
+            $zombie->setPosition($mapTile->getPosition());
         }
     }
 }

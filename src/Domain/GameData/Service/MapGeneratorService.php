@@ -101,8 +101,8 @@ class MapGeneratorService {
             $this->mapTiles->add(new MapTile(
                 $this->map,
                 $tile,
-                $rowIndex,
-                $columnIndex
+                $columnIndex,
+                $rowIndex
             )); 
         }
     }

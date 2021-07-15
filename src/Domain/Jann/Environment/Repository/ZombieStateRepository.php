@@ -20,7 +20,7 @@ class ZombieStateRepository extends ServiceEntityRepository
         parent::__construct($registry, ZombieState::class);
     }
 
-    public function findOrCreate(Zombie $zombie)
+    public function findOrCreate(Zombie $zombie, int $count)
     {
         $matches = $this->findBy([
             'health' => $zombie->getHealth(),
@@ -32,7 +32,8 @@ class ZombieStateRepository extends ServiceEntityRepository
         }
 
         $zombieState = new ZombieState(
-            $zombie
+            $zombie,
+            $count
         );
 
         $this->_em->persist($zombieState);

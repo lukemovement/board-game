@@ -14,23 +14,28 @@ class File {
 
     public function write(
         string $data
-    )
+    ): int|false
     {
-        file_put_contents($this->path, $data);
+        return file_put_contents($this->path, $data);
     }
 
-    public function read()
+    public function read(): string|false
     {
-        file_get_contents($this->path);
+        return file_get_contents($this->path);
     }
 
-    public function exists()
+    public function exists(): bool
     {
-        file_exists($this->path);
+        return file_exists($this->path);
     }
 
-    public function writable()
+    public function writable(): bool
     {
-        is_writeable($this->path);
+        return is_writeable($this->path);
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
     }
 }

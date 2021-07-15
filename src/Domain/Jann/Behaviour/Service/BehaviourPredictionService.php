@@ -20,6 +20,7 @@ use App\Domain\Jann\Environment\Service\TileStateSetupService;
 use App\Domain\Jann\NeuralNetworkConfig;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Throwable;
 
 class BehaviourPredictionService {
 
@@ -28,7 +29,6 @@ class BehaviourPredictionService {
         private PlayerStateRepository $playerStateRepository,
         private EntityManagerInterface $entityManager,
         private TileStateSetupService $tileStateSetupService,
-        private TileStateRepository $tileStateRepository
     ) {}
 
     private Player $player;
@@ -98,6 +98,9 @@ class BehaviourPredictionService {
             // Repeate for each outcome
             $this->walk($outcomes, $newPath, $allPaths, $depth);
         }
+
+        $this->entityManager->refresh($this->player);
+        $this->entityManager->refresh($this->player->getGame());
 
         return $allPaths->toArray();
     }
@@ -185,10 +188,11 @@ class BehaviourPredictionService {
     {
         return $this->player->getGame()->getMap()->getMapTile(
             $this->player->getPosition()
-        )->getAdjacentTiles()->map(fn(MapTile $mapTile) => $this->tileStateRepository->findOrCreate(
-            $this->player->getGame()->getZombiesAtPosition(
+        )->getAdjacentTiles()->map(
+            fn(MapTile $mapTile) => $this->tileStateSetupService->execute(
+                $this->player->getGame(),
                 $mapTile->getPosition()
             )
-        ));
+        );
     }
 }

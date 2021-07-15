@@ -9,11 +9,13 @@ use App\Domain\GamePlay\Entity\Player;
 use App\Domain\GamePlay\Entity\Zombie;
 use App\Domain\GamePlay\Service\ChanceGeneratorService;
 use App\Domain\GamePlay\Service\MovePlayerService;
+use App\Domain\GamePlay\Service\PlayerAttackZombieService;
 use App\Domain\Jann\Agent\Dto\DecisionDto;
 use App\Domain\Jann\Behaviour\Repository\BehaviourRepository;
 use App\Domain\Jann\Environment\Repository\PlayerStateRepository;
 use App\Domain\Jann\Environment\Repository\ZombieStateRepository;
 use App\Domain\Jann\Environment\Service\TileStateSetupService;
+use Throwable;
 
 class RandomExecutionService
 {
@@ -22,7 +24,8 @@ class RandomExecutionService
         private MovePlayerService $movePlayerService,
         private TileStateSetupService $tileStateSetupService,
         private PlayerStateRepository $playerStateRepository,
-        private BehaviourRepository $behaviourRepository
+        private BehaviourRepository $behaviourRepository,
+        private PlayerAttackZombieService $playerAttackZombieService
     ) {}
 
     public function execute(
@@ -38,9 +41,9 @@ class RandomExecutionService
             0,
             $mapTile->getAdjacentTiles()->count() + $game->getZombiesAtPosition(
                 $player->getPosition()
-            )->count()
+            )->count() - 1
         );
-        
+
         $previousTileState = $this->tileStateSetupService->execute($player->getGame(), $player->getPosition());
         $previousPlayerState = $this->playerStateRepository->findOrCreate($player);
 
@@ -68,8 +71,7 @@ class RandomExecutionService
                 }
             );
         } else {
-            $decisionIndex = $decisionIndex - ($mapTile->getAdjacentTiles()->count() - 1);
-    
+            $decisionIndex = $decisionIndex - ($mapTile->getAdjacentTiles()->count() + 1);
             $game->getZombiesAtPosition(
                 $player->getPosition()
             )->forAll(
@@ -78,13 +80,25 @@ class RandomExecutionService
                         return true;
                     }
 
-                    $previousZombieState = $this->zombieStateRepository->findOrCreate($zombie);
-        
-                    $this->zombieStateRepository->findOrCreate($zombie);
+                    $count = $player->getGame()->getZombiesAtPosition($player->getPosition())->filter(
+                        fn(Zombie $zombieMatch) => false === in_array(false, [
+                            $zombieMatch->getZombieType()->getId() === $zombie->getZombieType()->getId(),
+                            $zombieMatch->getHealth() === $zombie->getHealth(),
+                        ])
+                    )->count();
+
+                    $previousZombieState = $this->zombieStateRepository->findOrCreate($zombie, $count);
         
                     $this->playerAttackZombieService->execute($player, $zombie);
 
-                    $nextZombieState = $this->zombieStateRepository->findOrCreate($zombie);
+                    $count = $player->getGame()->getZombiesAtPosition($player->getPosition())->filter(
+                        fn(Zombie $zombieMatch) => false === in_array(false, [
+                            $zombieMatch->getZombieType()->getId() === $zombie->getZombieType()->getId(),
+                            $zombieMatch->getHealth() === $zombie->getHealth(),
+                        ])
+                    )->count();
+
+                    $nextZombieState = $this->zombieStateRepository->findOrCreate($zombie, $count);
         
                     return false;
                 }

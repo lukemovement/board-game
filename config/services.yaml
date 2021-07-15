@@ -30,6 +30,10 @@ services:
         tags:
             -  { name: console.command, command: z:map:render }
 
+    App\Domain\Jann\Agent\Command\CreateGameCommand:
+        tags:
+            - { name: console.command, command: z:jann:create }
+
     App\Domain\Jann\Agent\Command\SimulateGameCommand:
         tags:
             - { name: console.command, command: z:jann:simulate }

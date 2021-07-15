@@ -7,6 +7,7 @@ use App\Domain\Common\Type\Position;
 use App\Domain\GameData\Repository\MapTileRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Throwable;
 
 /**
  * @ORM\Entity(repositoryClass=MapTileRepository::class)
@@ -89,7 +90,7 @@ class MapTile
         if ($this->tile->getCanExitTop()) {
             $tiles->add($this->map->getMapTile($this->position->up()));
         }
-
+        
         if ($this->tile->getCanExitLeft()) {
             $tiles->add($this->map->getMapTile($this->position->left()));
         }
