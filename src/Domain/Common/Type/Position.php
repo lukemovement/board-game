@@ -3,32 +3,32 @@
 namespace App\Domain\Common\Type;
 class Position {
     
-    private string $column; // Left to right
-    private string $row; // Top to bottom
+    private int $column; // Left to right
+    private int $row; // Top to bottom
 
     public function __construct(array $position) {
-        $this->column = $position[0];
-        $this->row = $position[1];
+        $this->column = (int) $position[0];
+        $this->row = (int) $position[1];
     }
 
-    public function getColumn(): string
+    public function getColumn(): int
     {
         return $this->column;
     }
 
-    public function setColumn(string $column): self
+    public function setColumn(int $column): self
     {
         $this->column = $column;
 
         return $this;
     }
 
-    public function getRow(): string
+    public function getRow(): int
     {
         return $this->row;
     }
 
-    public function setRow(string $row): self
+    public function setRow(int $row): self
     {
         $this->row = $row;
 

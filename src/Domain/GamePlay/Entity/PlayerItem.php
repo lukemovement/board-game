@@ -104,7 +104,7 @@ class PlayerItem
 
         $modifierValue = 0;
 
-        $this->item->getModifiers()->forAll(function(PlayerStatModifier $modifier) use ($playerStat, $modifierValue)
+        $this->item->getModifiers()->forAll(function(PlayerStatModifier $modifier) use ($playerStat, &$modifierValue)
         {
             if (
                 $modifier->getPlayerStatConfig()->getId() !==
@@ -117,5 +117,7 @@ class PlayerItem
 
             return true;
         });
+
+        return $modifierValue;
     }
 }

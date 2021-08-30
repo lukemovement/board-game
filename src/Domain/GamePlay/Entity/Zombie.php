@@ -87,7 +87,7 @@ class Zombie implements MovableInterface
             null !== $this->position &&
             $this->position->matches($position)
         ) {
-            return false;
+            return $this;
         }
 
         $this->position = $position;

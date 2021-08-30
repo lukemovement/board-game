@@ -15,11 +15,10 @@ class DateRange {
         $this->endDate = $this->createDate(array_key_exists(1, $dates) ? $dates[1] : null);
     }
 
-    private function createDate(DateTimeImmutable|DateTime|null $date): DateTimeImmutable|null {
+    private function createDate(DateTimeImmutable|DateTime|null|int|string $date): DateTimeImmutable|null {
         switch(true) {
             case is_string($date) || is_int($date):
                 return new DateTimeImmutable($date);
-                break;
             case $date instanceof DateTime:
                 return DateTimeImmutable::createFromMutable($date);
             default:

@@ -48,10 +48,10 @@ class Fixture01PlayerStatConfigs extends Fixture implements ORMFixtureInterface
         $manager->flush();
         
         self::$playerAttackStatReference = $attack->getId();
-        $this->addReference(self::$playerAttackStatReference, $attack);
+        $this->addReference((string) self::$playerAttackStatReference, $attack);
         self::$playerHealthStatReference = $health->getId();
-        $this->addReference(self::$playerHealthStatReference, $health);
+        $this->addReference((string) self::$playerHealthStatReference, $health);
         self::$playerEnergyStatReference = $energy->getId();
-        $this->addReference(self::$playerEnergyStatReference, $energy);
+        $this->addReference((string) self::$playerEnergyStatReference, $energy);
     }
 }

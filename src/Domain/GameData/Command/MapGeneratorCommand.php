@@ -37,10 +37,10 @@ class MapGeneratorCommand extends Command
     {
         $this
             ->addArgument(self::ARG_NAME, InputOption::VALUE_REQUIRED, "The name of the map")
-            ->addOption(self::OPT_ROWS, 'r', InputOption::VALUE_OPTIONAL, 'Number or rows on the map', 10)
-            ->addOption(self::OPT_COLUMNS, 'c', InputOption::VALUE_OPTIONAL, 'Number or columns on the map', 10)
-            ->addOption(self::OPT_ZOMBIE_VISIBILITY, 'zv', InputOption::VALUE_OPTIONAL, 'The number of moves required for a zombie to chaise a player', 5)
-            ->addOption(self::OPT_ITEM_LIMIT, 'il', InputOption::VALUE_OPTIONAL, 'The maximum number of items a player is allowed to carray, excluding slots', 10)
+            ->addOption(self::OPT_ROWS, 'r', InputOption::VALUE_OPTIONAL, 'Number or rows on the map', "10")
+            ->addOption(self::OPT_COLUMNS, 'c', InputOption::VALUE_OPTIONAL, 'Number or columns on the map', "10")
+            ->addOption(self::OPT_ZOMBIE_VISIBILITY, 'zv', InputOption::VALUE_OPTIONAL, 'The number of moves required for a zombie to chaise a player', "5")
+            ->addOption(self::OPT_ITEM_LIMIT, 'il', InputOption::VALUE_OPTIONAL, 'The maximum number of items a player is allowed to carray, excluding slots', "10")
         ;
     }
 
@@ -50,10 +50,10 @@ class MapGeneratorCommand extends Command
         
         $name = $input->getArgument(self::ARG_NAME);
 
-        $rows = $input->getOption(self::OPT_ROWS);
-        $columns = $input->getOption(self::OPT_COLUMNS);
-        $zombieVisibility = $input->getOption(self::OPT_ZOMBIE_VISIBILITY);
-        $itemLimit = $input->getOption(self::OPT_ITEM_LIMIT);
+        $rows = (int) $input->getOption(self::OPT_ROWS);
+        $columns = (int) $input->getOption(self::OPT_COLUMNS);
+        $zombieVisibility = (int) $input->getOption(self::OPT_ZOMBIE_VISIBILITY);
+        $itemLimit = (int) $input->getOption(self::OPT_ITEM_LIMIT);
 
         $map = new Map(
             $name,

@@ -45,8 +45,6 @@ class PlayerStat
     {
         $this->playerStatConfig = $playerStatConfig;
         $this->level = $playerStatConfig->getLevel();
-        
-        $this->playerStatModifiers = new ArrayCollection();
     }
 
     public function getId(): ?int

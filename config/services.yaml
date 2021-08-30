@@ -24,16 +24,8 @@ services:
 
     App\Domain\GameData\Command\MapGeneratorCommand:
         tags:
-            -  { name: console.command, command: z:map:generate }
+            -  { name: console.command, command: app:map:generate }
 
     App\Domain\GameData\Command\MapRenderCommand:
         tags:
-            -  { name: console.command, command: z:map:render }
-
-    App\Domain\Jann\Agent\Command\CreateGameCommand:
-        tags:
-            - { name: console.command, command: z:jann:create }
-
-    App\Domain\Jann\Agent\Command\SimulateGameCommand:
-        tags:
-            - { name: console.command, command: z:jann:simulate }
+            -  { name: console.command, command: app:map:render }

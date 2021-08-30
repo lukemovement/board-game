@@ -135,9 +135,20 @@ class Map
         return $this->mapTiles;
     }
 
+    /**
+     * @param Collection<int, MapTile> $mapTiles
+     * @return self
+     */
     public function setMapTiles(Collection $mapTiles): self {
-        $this->mapTiles->forAll(fn(int $i, MapTile $mapTile) => $this->removeMapTile($mapTile));
-        $mapTiles->forAll(fn(int $i, MapTile $mapTile) => $this->addMapTile($mapTile));
+        $this->mapTiles->forAll(function(int $i, MapTile $mapTile) {
+            $this->removeMapTile($mapTile);
+            return true;
+        });
+
+        $mapTiles->forAll(function(int $i, MapTile $mapTile) {
+            $this->addMapTile($mapTile);
+            return true;
+        });
 
         return $this;
     }

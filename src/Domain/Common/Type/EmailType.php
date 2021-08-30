@@ -15,7 +15,7 @@ class EmailType extends Type
         return 'text';
     }
 
-    public function convertToPHPValue($value, AbstractPlatform $platform): EmailType|null
+    public function convertToPHPValue($value, AbstractPlatform $platform): Email|null
     {
         if (is_string($value)) {
             return new Email($value);

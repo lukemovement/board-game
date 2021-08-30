@@ -124,14 +124,6 @@ class Game
         return $this;
     }
 
-    /**
-     * @return Collection|Tile[]
-     */
-    public function getTiles(): Collection
-    {
-        return $this->tiles;
-    }
-
     public function getRound(): ?int
     {
         return $this->round;
@@ -315,7 +307,7 @@ class Game
         }
     }
 
-    public function getZombieHealthModifier(): int
+    public function getZombieHealthModifier(): float
     {
         return ceil(
             $this->round *
@@ -323,7 +315,7 @@ class Game
         );
     }
 
-    public function getMaxZombies(): int
+    public function getMaxZombies(): float
     {
         return ceil(
             (
@@ -355,7 +347,7 @@ class Game
     }
 
     /**
-     * @return ArrayCollection|PathFinderNodeDto
+     * @return ArrayCollection|PathFinderNodeDto[]
      */
     public function getAvailableRoutes(
         MapTile $mapTile,
